@@ -43,17 +43,17 @@
       NavLayout,
       WalletInput
     },
-
+  
     computed: {
       isValid () {
-        return this.password && this.newPassword && this.newPassword2
+        return this.password && this.newPassword.length>=6 && this.newPassword.length<=20 && this.newPassword2.length>=6 && this.newPassword2.length<=20
       }
     },
 
     methods: {
       changePassword () {
         if (this.newPassword !== this.newPassword2) {
-          this.$toast(this.$t('common.passwordInConsistent'), {
+          this.$toast(this.$t('errors.passwordInConsistent'), {
             type: 'center'
           })
 
@@ -67,7 +67,9 @@
           this.$toast(this.$t('setting.password.changeSuccess'), {
             type: 'center'
           })
-          window.history.go(-1)
+          this.$router.push({
+            name: 'welcome'
+          })
         }, (error) => {
           this.$toast(this.$t('setting.password.changeFailure') + ' ' + formatError(error), {
             type: 'center',
