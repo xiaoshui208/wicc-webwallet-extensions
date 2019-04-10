@@ -87,6 +87,12 @@ export default {
     })
   },
 
+  async validateRegisterAccount (address) {
+    return callBackend('validateRegisterAccount', {
+      address
+    })
+  },
+
   async send (network, address, destAddr, value, fees, desc) {
     return callBackend('send', {
       network,
@@ -117,6 +123,10 @@ export default {
       address,
       regId
     })
+  },
+
+  async callRaw (action, data) {
+    return callBackend(action, data)
   },
 
   async callContract (network, address, destRegId, value, fees, contract) {

@@ -24,7 +24,7 @@
       <fees-slider v-model="fees" type="publish-contract"></fees-slider>
       <div class="button-wrapper">
         <button @click="cancel">{{ $t('window.publishContract.closeButton') }}</button>
-        <button class="btn-primary" @click="confirm">{{ $t('window.publishContract.confirmButton') }}</button>
+        <button class="btn-primary" @click="onlyRaw ? confirmRaw() : confirm()">{{ $t('window.publishContract.confirmButton') }}</button>
       </div>
     </div>
   </div>
@@ -36,9 +36,12 @@
   import FeesSlider from '../components/fees-slider'
   import API from '../api'
   import formatError from '../api/format-error'
+  import WindowMixin from './mixin'
 
   export default {
     name: 'contract',
+
+    mixins: [WindowMixin],
 
     components: {
       Main,
@@ -47,35 +50,51 @@
     },
 
     created () {
-      const query = this.$router.currentRoute.query
-      this.script = query.script
+      const query = this.$route.query  //currentRoute
+      //const par = location.hash.split('?')[1].split('&');
+      this.script =  query.script
       this.scriptDesc = query.scriptDesc
-      this.callbackId = query.callbackId
-
-      API.getState().then((state) => {
-        this.network = state.network
-        this.address = state.activeAddress
-        this.activeAccount = state.activeAccount
-      })
+      this.callbackId = query.callbackId,
+      this.onlyRaw = query.onlyRaw
     },
 
     methods: {
-      handleNetworkChange (network, header) {
-        this.network = network
+      confirmRaw () {
+        this.$loading(this.$t('window.publishContract.confirmLoading'))
+        API.callRaw('genPublishContractRaw', {
+          network: this.network,
+          address: this.address,
+          fees: this.fees,
+          script: this.script,
+          scriptDesc: this.scriptDesc
+        }).then((value) => {
+          this.$loading.close()
+          this.$toast(this.$t('window.publishContract.createSuccess'), {
+            type: 'center'
+          })
 
-        header.hideNetwork()
+          if (this.callbackId) {
+            API.callPageCallback(this.callbackId, null, value)
+          }
 
-        if (network === 'mainnet') {
-          this.address = this.activeAccount.address
-        } else {
-          this.address = this.activeAccount.testnetAddress
-        }
+          setTimeout(() => {
+            window.close()
+          }, 300)
+        }, (error) => {
+          this.$loading.close()
+          this.$toast(this.$t('window.publishContract.createFailure') + ' ' + formatError(error), {
+            type: 'center',
+            duration: 5000,
+            wordWrap: true
+          })
+
+          if (this.callbackId) {
+            API.callPageCallback(this.callbackId, error, null)
+          }
+
+          console.log(error)
+        })
       },
-
-      cancel () {
-        window.close()
-      },
-
       confirm () {
         this.$loading(this.$t('window.publishContract.confirmLoading'))
 
@@ -111,12 +130,8 @@
 
     data () {
       return {
-        callbackId: null,
-        activeAccount: null,
-        address: null,
         script: null,
         scriptDesc: null,
-        network: null,
         fees: 1.1
       }
     }

@@ -46,7 +46,7 @@
   
     computed: {
       isValid () {
-        return this.password && this.newPassword.length>=6 && this.newPassword.length<=20 && this.newPassword2.length>=6 && this.newPassword2.length<=20
+        return this.password && this.newPassword2 && this.newPassword.length>=6 && this.newPassword.length<=20 && this.newPassword2.length>=6 && this.newPassword2.length<=20
       }
     },
 
@@ -64,9 +64,11 @@
 
         API.changePassword(this.password, this.newPassword).then(() => {
           this.$loading.close()
+
           this.$toast(this.$t('setting.password.changeSuccess'), {
             type: 'center'
           })
+
           this.$router.push({
             name: 'welcome'
           })
@@ -76,6 +78,7 @@
             duration: 5000,
             wordWrap: true
           })
+
           this.$loading.close()
           console.log(error)
         })
